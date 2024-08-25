@@ -38,11 +38,22 @@
 
     <div class="row">
         @if (can('b', 'admin-web'))
-            <div class="col-lg-6 col-sm-12 col-xs-12">
+            <div class="col-lg-3 col-sm-6 col-xs-12">
                 <a href="{{ route('web.form') }}" class="small-box bg-green">
                     <div class="inner" style="height:125px">
                         <br>
-                        <h3>Tambah Artikel<br></h3><br><br>
+                        <h3>Tambah<br>Artikel</h3><br><br>
+                    </div>
+                    <div class="icon" style="padding-right:60px">
+                        <i class="fa fa-plus"></i>
+                    </div>
+                </a>
+            </div>
+            <div class="col-lg-3 col-sm-6 col-xs-12">
+                <a href="{{ route('web') }}" class="small-box bg-blue">
+                    <div class="inner" style="height:125px">
+                        <br>
+                        <h3>Lihat Daftar<br>Artikel</h3><br><br>
                     </div>
                     <div class="icon">
                         <i class="ion-ios-paper"></i>
@@ -66,7 +77,7 @@
                         <br>
                         <h3>Pengaturan Komentar<br></h3><br><br>
                     </div>
-                    <div class="icon" style="padding-right:75px">
+                    <div class="icon" style="padding-right:80px">
                         <i class="fa fa-comment"></i>
                     </div>
                 </a>

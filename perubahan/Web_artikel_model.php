@@ -240,7 +240,7 @@ class Web_artikel_model extends MY_Model
             'upload_path'   => $upload_path,
             'allowed_types' => "gif|jpg|png|jpeg",
             // 'overwrite'     => TRUE,
-            'max_size'      => "8192",
+            'max_size'      => "65536",
             'max_height'    => "16384",
             'max_width'     => "16384"
         );
@@ -263,7 +263,7 @@ class Web_artikel_model extends MY_Model
 
             if ($this->upload->do_upload('uploaded_file')) {
                 $uploaded_data[] = $this->upload->data();
-                log_message('error', print_r('uploading file...' . $uploaded_data, TRUE));
+                // log_message('error', print_r('uploading file...' . $uploaded_data, TRUE));
             } else {
                 $upload_errors[] = $this->upload->display_errors();
             }
@@ -343,6 +343,7 @@ class Web_artikel_model extends MY_Model
             if ($cat == AGENDA) {
                 $outp = $this->insert_agenda($result);
             } else {
+                // Inserts new article to database
                 $outp = $this->db->insert('artikel', $result);
             }
             status_sukses($outp);
@@ -351,8 +352,8 @@ class Web_artikel_model extends MY_Model
         }
 
         if (!empty($upload_errors)) {
-            log_message('error', print_r($upload_errors, true));
-            log_message('error', print_r($uploaded_data, true));
+            // log_message('error', print_r($upload_errors, true));
+            // log_message('error', print_r($uploaded_data, true));
             // Display error
             $_SESSION['success'] = -1;
             $_SESSION['error_msg'] .= 'Telah terjadi kegagalan';
@@ -422,7 +423,6 @@ class Web_artikel_model extends MY_Model
         }
 
         // Upload dokumen lampiran
-
         $lokasi_file = $_FILES['dokumen']['tmp_name'];
         $tipe_file   = TipeFile($_FILES['dokumen']);
         $nama_file   = $_FILES['dokumen']['name'];
@@ -498,6 +498,162 @@ class Web_artikel_model extends MY_Model
     }
 
     public function update($cat, $id = 0)
+    {
+        session_error_clear();
+        $data = $this->input->post();
+        $upload_path = FCPATH . LOKASI_UPLOAD . 'media/' . $data['folder_name'] . '/';
+        log_message('error', print_r($data, true));
+
+        $hapus_lampiran = $data['hapus_lampiran'];
+        unset($data['hapus_lampiran']);
+
+        if (!is_dir($upload_path)) {
+            if (!mkdir($upload_path, 0777, true)) {
+                $_SESSION['success'] = -1;
+                $_SESSION['error_msg'] = "Direktori gagal dibuat";
+                return;
+            }
+        }
+
+        /**
+         * Hal-hal yang terjadi saat update artikel:
+         * 1. Judul dan folder penyimpanan gambar tetap sama
+         * 2. Tambahkan gambar baru apabila user mengunggah gambar baru
+         * 3. Periksa apabila gambar sudah ada sebelumnya (untuk menghindari duplikasi)
+         * 4. Tambahkan gambar yang baru itu ke isi artikel (append)
+         */
+
+        $config = array(
+            'upload_path'   => $upload_path,
+            'allowed_types' => "gif|jpg|png|jpeg",
+            // 'overwrite'     => TRUE,
+            'max_size'      => "65536",
+            'max_height'    => "16384",
+            'max_width'     => "16384"
+        );
+
+        $this->load->library('upload', $config);
+        $uploaded_data = array();
+        $upload_errors = array();
+
+        if (!empty($data['files'])) {
+            foreach ($_FILES['gambar']['name'] as $key => $image) {
+                // Generate a unique file name for each file
+                $unique_filename = $image;
+
+                $_FILES['uploaded_file']['name']     = $unique_filename;
+                $_FILES['uploaded_file']['type']     = $_FILES['gambar']['type'][$key];
+                $_FILES['uploaded_file']['tmp_name'] = $_FILES['gambar']['tmp_name'][$key];
+                $_FILES['uploaded_file']['error']    = $_FILES['gambar']['error'][$key];
+                $_FILES['uploaded_file']['size']     = $_FILES['gambar']['size'][$key];
+
+                $this->upload->initialize($config);
+
+                if ($this->upload->do_upload('uploaded_file')) {
+                    $uploaded_data[] = $this->upload->data();
+                    // log_message('error', print_r('uploading file...' . $uploaded_data, TRUE));
+                } else {
+                    $upload_errors[] = $this->upload->display_errors();
+                }
+            }
+        }
+
+        // Update artikel tidak perlu membuat thumbnail lagi
+
+        $base_url = sprintf(
+            "%s://%s%s",
+            isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off' ? 'https' : 'http',
+            $_SERVER['SERVER_NAME'],
+            '/'
+        );
+
+        // Tidak perlu mengatur judul lagi
+
+        // Teks sudah masuk di sini; teks akan muncul paling belakang
+        $result['isi'] = $data['isi'];
+        // Pengaturan upload update gambar
+        // Apabila tidak ada gambar baru, maka tahap ini dilompati
+        $temp_result = "";
+        if (!empty($data['files']) && !empty($uploaded_data)) {
+            foreach ($uploaded_data as $udata) {
+                $temp = $base_url . LOKASI_UPLOAD . 'media/' . $data['folder_name'] . '/' . $udata['file_name'];
+                $temp_result .= "<p><img src='" . $temp . "'/></p>";
+            }
+        }
+        // Menambahkan gambar-gambar baru di paling atas (gambar terbaru muncul paling atas)
+        $result['isi'] = $temp_result . $result['isi'];
+
+        // log_message('error', print_r($data['isi'], true));
+
+        // Kedua hal ini mungkin berubah
+        $result['id_kategori'] = $cat;
+        $result['id_user']     = $_SESSION['user'];
+
+        // Kontributor tidak dapat mengaktifkan artikel
+        if ($_SESSION['grup'] == 4) {
+            $result['enabled'] = 2;
+        }
+
+        // Upload dokumen lampiran
+        $lokasi_file = $_FILES['dokumen']['tmp_name'];
+        $tipe_file   = TipeFile($_FILES['dokumen']);
+        $nama_file   = $_FILES['dokumen']['name'];
+        $ext         = get_extension($nama_file);
+        $nama_file   = str_replace(' ', '-', $nama_file); // normalkan nama file
+
+        if ($nama_file && !empty($lokasi_file)) {
+            if (!in_array($tipe_file, unserialize(MIME_TYPE_DOKUMEN)) || !in_array($ext, unserialize(EXT_DOKUMEN))) {
+                unset($data['link_dokumen']);
+                $_SESSION['error_msg'] .= ' -> Jenis file salah: ' . $tipe_file;
+                $_SESSION['success'] = -1;
+            } else {
+                $data['dokumen'] = $nama_file;
+                if ($data['link_dokumen'] == '') {
+                    $data['link_dokumen'] = $data['judul'];
+                }
+                UploadDocument2($nama_file);
+            }
+        }
+
+        if ($data['tgl_upload'] == '') {
+            $data['tgl_upload'] = date('Y-m-d H:i:s');
+        } else {
+            $tempTgl            = date_create_from_format('d-m-Y H:i:s', $data['tgl_upload']);
+            $data['tgl_upload'] = $tempTgl->format('Y-m-d H:i:s');
+        }
+        if ($data['tgl_agenda'] == '') {
+            unset($data['tgl_agenda']);
+        } else {
+            $tempTgl            = date_create_from_format('d-m-Y H:i:s', $data['tgl_agenda']);
+            $data['tgl_agenda'] = $tempTgl->format('Y-m-d H:i:s');
+        }
+
+        $data['slug'] = unique_slug('artikel', $data['judul'], $id);
+
+        $this->group_akses();
+
+        if ($cat == AGENDA) {
+            $outp = $this->update_agenda($id, $data);
+        } else {
+            // Updates article in database
+            $outp = $this->config_id()->where('a.id', $id)->update('artikel a', $result);
+        }
+
+        if ($hapus_lampiran == 'true') {
+            $this->config_id()->where('id', $id)->update('artikel', ['dokumen' => null, 'link_dokumen' => '']);
+        }
+
+        status_sukses($outp);
+
+        if (!empty($upload_errors)) {
+            // Display error
+            $_SESSION['success'] = -1;
+            $_SESSION['error_msg'] .= 'Telah terjadi kegagalan';
+            $_SESSION['error_msg'] .= $this->upload->display_errors();
+        }
+    }
+
+    public function update_old($cat, $id = 0)
     {
         session_error_clear();
 

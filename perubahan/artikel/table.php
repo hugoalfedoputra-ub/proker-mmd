@@ -18,13 +18,13 @@
 	<section class="content" id="maincontent">
 		<div class="">
 			<div class="col-lg-6 col-sm-12 col-xs-12" style="padding-left:0px">
-				<a href="<?= site_url('web/form') ?>" class="small-box bg-blue">
+				<a href="<?= site_url('web/form') ?>" class="small-box bg-green">
 					<div class="inner">
 						<br>
 						<h3>Tambah Artikel</h3><br><br>
 					</div>
-					<div class="icon" style="margin-top:15px;margin-right:25px">
-						<i class="ion-ios-paper"></i>
+					<div class="icon" style="margin-top:15px;margin-right:25px;padding-right:40px">
+						<i class="fa fa-plus"></i>
 					</div>
 				</a>
 			</div>
@@ -192,11 +192,12 @@
 																		<td class="padat"><?= $data['no'] ?></td>
 																		<td class="aksi">
 																			<?php if ($data['boleh_ubah'] && $this->CI->cek_hak_akses('u')) : ?>
-																				<a href="<?= site_url('web/form/' . encrypt($data['id'])) ?>" class="btn bg-orange btn-flat btn-sm" title="Ubah Data"><i class="fa fa-edit"></i></a>
+																				<a href="<?= site_url('web/form/' . encrypt($data['id'])) ?>" class="btn bg-orange btn-flat btn-sm" title="Edit Artikel"><i class="fa fa-edit"></i> Edit Artikel</a>
+																				<!-- <a href="<?= site_url('artikel/' . buat_slug($data)); ?>" target="_blank" class="btn bg-green btn-flat btn-sm" title="Lihat Artikel"><i class="fa fa-eye"></i></a> -->
 																				<?php if ($this->CI->cek_hak_akses('h')) : ?>
 																					<a href="#" data-href="<?= site_url('web/delete/' . encrypt($data['id'])) ?>" class="btn bg-maroon btn-flat btn-sm" title="Hapus" data-toggle="modal" data-target="#confirm-delete"><i class="fa fa-trash-o"></i></a>
 																				<?php endif; ?>
-																				<a href="<?= site_url('web/ubah_kategori_form/' . encrypt($data['id'])) ?>" class="btn bg-purple btn-flat btn-sm" data-remote="false" data-toggle="modal" data-target="#modalBox" data-title="Ubah Kategori" title="Ubah Kategori"><i class="fa fa-folder-open"></i></a>
+																				<!-- <a href="<?= site_url('web/ubah_kategori_form/' . encrypt($data['id'])) ?>" class="btn bg-purple btn-flat btn-sm" data-remote="false" data-toggle="modal" data-target="#modalBox" data-title="Ubah Kategori" title="Ubah Kategori"><i class="fa fa-folder-open"></i></a> -->
 																				<?php if ($data['boleh_komentar'] == 1) : ?>
 																					<a href="<?= site_url('web/komentar_lock/' . encrypt($data['id']) . '/2') ?>" class="btn bg-info btn-flat btn-sm" title="Tutup Komentar Artikel"><i class="fa fa-comment-o"></i></a>
 																				<?php else : ?>
@@ -207,14 +208,13 @@
 																					<a href="<?= site_url('web/headline/' . encrypt($data['id'])) ?>" class="btn bg-teal btn-flat btn-sm" title="Jadikan Berita Utama">
 																						<i class="<?= ($data['headline'] == 1) ? 'fa fa-star' : 'fa fa-star-o' ?>"></i>
 																					</a>
-																					<a href="<?= site_url('web/slide/' . encrypt($data['id'])); ?>" class="btn bg-gray btn-flat btn-sm" title="<?= ($data['slider'] == 1) ? 'Keluarkan dari slide' : 'Masukkan ke dalam slide' ?>">
+																					<!-- <a href="<?= site_url('web/slide/' . encrypt($data['id'])); ?>" class="btn bg-gray btn-flat btn-sm" title="<?= ($data['slider'] == 1) ? 'Keluarkan dari slide' : 'Masukkan ke dalam slide' ?>">
 																						<i class="<?= ($data['slider'] == 1) ? 'fa fa-pause' : 'fa fa-play' ?>"></i>
-																					</a>
+																					</a> -->
 																				<?php else : ?>
 																					<a href="<?= site_url('web/artikel_lock/' . encrypt($data['id']) . '/1'); ?>" class="btn bg-navy btn-flat btn-sm" title="Aktifkan Artikel"><i class="fa fa-lock"></i></a>
 																				<?php endif ?>
 																			<?php endif; ?>
-																			<a href="<?= site_url('artikel/' . buat_slug($data)); ?>" target="_blank" class="btn bg-green btn-flat btn-sm" title="Lihat Artikel"><i class="fa fa-eye"></i></a>
 																		</td>
 																		<td><?= $data['judul'] ?></td>
 																		<td nowrap><?= hit($data['hit']) ?></td>
